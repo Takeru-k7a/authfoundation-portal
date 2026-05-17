@@ -6,9 +6,15 @@ The current AuthFoundation API still owns the OIDC flow and accepts form posts. 
 
 ## Screens
 
+- `/`
 - `/login?session_id=...`
 - `/signup?session_id=...`
 - `/terms?session_id=...`
+- `/callback?code=...&state=...`
+
+`/` starts the OIDC authorization code flow with PKCE. It uses `client_id=00000000000000000000000000000000` by default, stores `state`, `nonce`, and `code_verifier` in `sessionStorage`, and redirects to the AuthFoundation API `/authorize` endpoint.
+
+`/callback` validates `state`, exchanges the returned authorization code at `/token`, and stores the returned tokens in `sessionStorage`. This is a scaffolding behavior for development; production authorization state should be tightened before storing long-lived tokens in the browser.
 
 ## Local Run
 
@@ -24,12 +30,28 @@ When using a separate API origin:
 
 ```powershell
 $env:NUXT_PUBLIC_AUTH_API_BASE="https://auth.osolab-auth.jp"
+$env:NUXT_PUBLIC_AUTH_CLIENT_ID="00000000000000000000000000000000"
+$env:NUXT_PUBLIC_AUTH_SCOPE="openid profile email"
 npm run dev
 ```
 
 For a separate origin, AuthFoundation will also need CORS, `Access-Control-Expose-Headers: Location`, and cookie settings because login uses the auth session cookie.
 
 ## Existing API Contract
+
+### Start Authorization
+
+- `GET /authorize`
+- Query: `response_type=code`
+- Query: `client_id`
+- Query: `redirect_uri`
+- Query: `state`
+- Query: `scope`
+- Query: `code_challenge_method=S256`
+- Query: `code_challenge`
+- Query: `nonce`
+
+The portal top page builds this URL and relies on the API to redirect back to `/login?session_id=...`.
 
 ### Login
 
@@ -55,6 +77,13 @@ For a separate origin, AuthFoundation will also need CORS, `Access-Control-Expos
 - `Content-Type: application/x-www-form-urlencoded`
 - Header: `x-session-id: <authorization session id>`
 - Body: `accepted`, repeated `term_ids`
+
+### Token
+
+- `POST /token`
+- `Content-Type: application/x-www-form-urlencoded`
+- Header: `x-flow-type: AuthorizationCode`
+- Body: `grant_type=authorization_code`, `client_id`, `code`, `code_verifier`, `redirect_uri`
 
 ## Cloud Run Build
 

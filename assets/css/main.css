@@ -321,6 +321,79 @@ input {
   font-weight: 700;
 }
 
+.portal-metrics {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 12px;
+  width: min(100%, 30rem);
+  border: 1px solid rgb(255 250 240 / 20%);
+  border-radius: 22px;
+  padding: 16px;
+  background: rgb(255 255 255 / 8%);
+  color: rgb(255 250 240 / 80%);
+}
+
+.portal-metrics code,
+.portal-metrics strong {
+  color: #f4c673;
+  word-break: break-all;
+}
+
+.flow-box,
+.token-summary {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 18px;
+  background: rgb(255 255 255 / 58%);
+}
+
+.flow-box-muted {
+  background: var(--panel-strong);
+}
+
+.flow-box h2,
+.token-summary h2 {
+  margin: 0 0 12px;
+  color: var(--accent-strong);
+  font-size: 1rem;
+}
+
+.flow-box ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.flow-box dl,
+.token-summary dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.flow-box dl div,
+.token-summary dl div {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  gap: 10px;
+}
+
+.flow-box dt,
+.token-summary dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.flow-box dd,
+.token-summary dd {
+  margin: 0;
+  color: var(--accent-strong);
+  word-break: break-all;
+}
+
 @media (max-width: 780px) {
   .auth-shell {
     padding: 18px;
@@ -337,5 +410,11 @@ input {
 
   .auth-card {
     padding: 24px;
+  }
+
+  .flow-box dl div,
+  .token-summary dl div {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }

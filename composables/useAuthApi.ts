@@ -3,7 +3,8 @@ import type {
   LoginResponse,
   SignupResponse,
   TermsResponse,
-  TermsSubmitResponse
+  TermsSubmitResponse,
+  TokenResponse
 } from "~/types/auth";
 import { sha256HexUpper } from "~/utils/sha256";
 
@@ -48,7 +49,8 @@ export function useAuthApi() {
   const postForm = async <T>(
     path: string,
     sessionId: string,
-    values: Record<string, FormValue | FormValue[]>
+    values: Record<string, FormValue | FormValue[]>,
+    extraHeaders: Record<string, string> = {}
   ): Promise<AuthApiResult<T>> => {
     const body = new URLSearchParams();
     Object.entries(values).forEach(([key, value]) => {
@@ -65,7 +67,8 @@ export function useAuthApi() {
       credentials: "include",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        ...(sessionId ? { "x-session-id": sessionId } : {})
+        ...(sessionId ? { "x-session-id": sessionId } : {}),
+        ...extraHeaders
       },
       body: body.toString()
     });
@@ -123,6 +126,23 @@ export function useAuthApi() {
     });
   };
 
+  const exchangeCode = async (input: {
+    clientId: string;
+    code: string;
+    codeVerifier: string;
+    redirectUri: string;
+  }) => {
+    return await postForm<TokenResponse>("/token", "", {
+      grant_type: "authorization_code",
+      client_id: input.clientId,
+      code: input.code,
+      code_verifier: input.codeVerifier,
+      redirect_uri: input.redirectUri
+    }, {
+      "x-flow-type": "AuthorizationCode"
+    });
+  };
+
   return {
     authApiBase,
     resolveApiPath,
@@ -130,6 +150,7 @@ export function useAuthApi() {
     login,
     signup,
     fetchTerms,
-    submitTerms
+    submitTerms,
+    exchangeCode
   };
 }

@@ -27,6 +27,8 @@ jobs:
       CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'authfoundation-portal' }}
       CLOUD_RUN_IMAGE_NAME: ${{ vars.CLOUD_RUN_IMAGE_NAME || 'authfoundation-auth-ui' }}
       NUXT_PUBLIC_AUTH_API_BASE: ${{ vars.NUXT_PUBLIC_AUTH_API_BASE || 'https://auth.osolab-auth.jp' }}
+      NUXT_PUBLIC_AUTH_CLIENT_ID: ${{ vars.NUXT_PUBLIC_AUTH_CLIENT_ID || '00000000000000000000000000000000' }}
+      NUXT_PUBLIC_AUTH_SCOPE: ${{ vars.NUXT_PUBLIC_AUTH_SCOPE || 'openid profile email' }}
       CLOUD_RUN_ALLOW_UNAUTHENTICATED: ${{ vars.CLOUD_RUN_ALLOW_UNAUTHENTICATED || 'true' }}
       CLOUD_RUN_CPU: ${{ vars.CLOUD_RUN_CPU || '1' }}
       CLOUD_RUN_MEMORY: ${{ vars.CLOUD_RUN_MEMORY || '512Mi' }}
@@ -106,7 +108,7 @@ jobs:
             --cpu "${CLOUD_RUN_CPU}"
             --memory "${CLOUD_RUN_MEMORY}"
             --ingress "${CLOUD_RUN_INGRESS}"
-            --update-env-vars "NUXT_PUBLIC_AUTH_API_BASE=${NUXT_PUBLIC_AUTH_API_BASE}"
+            --update-env-vars "NUXT_PUBLIC_AUTH_API_BASE=${NUXT_PUBLIC_AUTH_API_BASE},NUXT_PUBLIC_AUTH_CLIENT_ID=${NUXT_PUBLIC_AUTH_CLIENT_ID},NUXT_PUBLIC_AUTH_SCOPE=${NUXT_PUBLIC_AUTH_SCOPE}"
           )
 
           case "${CLOUD_RUN_ALLOW_UNAUTHENTICATED,,}" in

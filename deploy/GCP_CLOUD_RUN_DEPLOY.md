@@ -45,6 +45,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\set-github-actions
 
 If secrets are not already set in this repository, create `deploy/github-actions.secrets.json` from the example and run without `-SkipSecrets`.
 
+Current runtime variables:
+
+```text
+NUXT_PUBLIC_AUTH_API_BASE=https://auth.osolab-auth.jp
+NUXT_PUBLIC_AUTH_CLIENT_ID=00000000000000000000000000000000
+NUXT_PUBLIC_AUTH_SCOPE=openid profile email
+```
+
+`NUXT_PUBLIC_AUTH_CLIENT_ID` is the client used by the portal top page when it starts the authorization code + PKCE flow.
+
 ## Deploy
 
 Run GitHub Actions workflow:

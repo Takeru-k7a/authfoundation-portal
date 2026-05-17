@@ -5,6 +5,8 @@
   "CLOUD_RUN_SERVICE": "authfoundation-portal",
   "CLOUD_RUN_IMAGE_NAME": "authfoundation-auth-ui",
   "NUXT_PUBLIC_AUTH_API_BASE": "https://auth.osolab-auth.jp",
+  "NUXT_PUBLIC_AUTH_CLIENT_ID": "00000000000000000000000000000000",
+  "NUXT_PUBLIC_AUTH_SCOPE": "openid profile email",
   "CLOUD_RUN_ALLOW_UNAUTHENTICATED": "true",
   "CLOUD_RUN_CPU": "1",
   "CLOUD_RUN_MEMORY": "512Mi",

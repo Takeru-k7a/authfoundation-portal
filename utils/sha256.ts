@@ -104,7 +104,10 @@ function sha256Fallback(text: string): string {
 
 export async function sha256HexUpper(text: string): Promise<string> {
   if (globalThis.crypto?.subtle) {
-    const digest = await globalThis.crypto.subtle.digest("SHA-256", utf8Bytes(text));
+    const bytes = utf8Bytes(text);
+    const buffer = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(buffer).set(bytes);
+    const digest = await globalThis.crypto.subtle.digest("SHA-256", buffer);
     return Array.from(new Uint8Array(digest))
       .map((byte) => byte.toString(16).padStart(2, "0"))
       .join("")
