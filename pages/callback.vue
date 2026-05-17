@@ -9,7 +9,7 @@
       </p>
 
       <p v-if="status === 'success'" class="message message-info">
-        ログインが完了しました。トークンはこのブラウザの sessionStorage に保存しています。
+        ログインが完了しました。トークンはこのブラウザの localStorage に保存しています。
       </p>
 
       <p v-if="status === 'error'" class="message message-error">

@@ -28,9 +28,10 @@ The portal top page starts OIDC authorization code flow with PKCE.
 - Default `client_id`: `00000000000000000000000000000000`
 - Default scope: `openid profile email`
 - Start endpoint: Auth API `/authorize`
-- Callback page: portal `/callback`
+- Callback page: portal `/`
 - Token endpoint: Auth API `/token`
 - Token request header: `x-flow-type: AuthorizationCode`
+- UserInfo endpoint: Auth API `/userinfo`
 
 Flow summary:
 
@@ -40,11 +41,12 @@ Flow summary:
 4. Auth API returns `session_id` in the JSON body and `redirect_url` without a `session_id` query parameter.
 5. `/` stores `session_id` in `localStorage` and navigates to the returned screen URL, normally `/login`.
 6. Login posts credentials and `session_id` in the form body to Auth API `/login`.
-7. Auth API redirects back to `/callback?code=...&state=...`.
-8. `/callback` validates `state` and exchanges the code at `/token`.
-9. Returned tokens are stored in `sessionStorage` for scaffolding only.
+7. Auth API redirects back to `/?code=...&state=...`.
+8. `/` validates `state` and exchanges the code at `/token`.
+9. `/` stores returned tokens in `localStorage`, calls `/userinfo`, and stores UserInfo in `localStorage`.
+10. `/` removes `code` and `state` from the browser URL with `history.replaceState`.
 
-Production note: browser `sessionStorage` token storage is acceptable for this scaffold, but should be replaced or tightened before handling sensitive production sessions.
+Production note: browser `localStorage` token storage is acceptable for this scaffold only, but should be replaced or tightened before handling sensitive production sessions.
 
 ## Runtime Configuration
 
@@ -88,7 +90,7 @@ After workflow success, verify:
 
 ```powershell
 curl.exe -I https://portal.osolab-auth.jp/
-curl.exe -I https://portal.osolab-auth.jp/callback
+curl.exe -I https://portal.osolab-auth.jp/
 ```
 
 If domain certificate provisioning is not ready, verify Cloud Run service URL instead and report the domain state separately.
@@ -111,9 +113,22 @@ https://portal.osolab-auth.jp
 
 The Auth API must also expose the `Location` header because login and terms endpoints return redirects consumed by the browser UI.
 
+The default portal client must register this redirect URI:
+
+```text
+https://portal.osolab-auth.jp/
+```
+
 Portal-owned authorization session handling:
 
 - Do not put `session_id` in portal URLs.
 - Store the active authorization `session_id` in `localStorage` under `authfoundation.portal.authorization_session_id`.
 - Send `session_id` to Auth API screen actions in `application/x-www-form-urlencoded` body fields.
 - Keep `x-session-id` only as a legacy API compatibility path; new portal changes should not depend on it.
+
+Portal-owned token and UserInfo handling:
+
+- Use `/` as the primary authorization redirect URI.
+- Store tokens in `localStorage` under `authfoundation.portal.tokens`.
+- Store UserInfo claims in `localStorage` under `authfoundation.portal.user_info`.
+- Remove callback query parameters after successful processing.

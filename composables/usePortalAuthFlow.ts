@@ -2,6 +2,7 @@ import { createCodeChallenge, createOpaqueValue, createPkceVerifier } from "~/ut
 
 const FLOW_STORAGE_KEY = "authfoundation.portal.oidc";
 const TOKEN_STORAGE_KEY = "authfoundation.portal.tokens";
+const USER_INFO_STORAGE_KEY = "authfoundation.portal.user_info";
 
 type StoredFlow = {
   state: string;
@@ -22,6 +23,10 @@ export type StoredTokens = {
   issued_at: string;
 };
 
+export type StoredUserInfo = Record<string, unknown> & {
+  saved_at: string;
+};
+
 export function usePortalAuthFlow() {
   const api = useAuthApi();
   const authorizationSession = useAuthorizationSession();
@@ -30,7 +35,7 @@ export function usePortalAuthFlow() {
   const clientId = computed(() => String(config.public.authClientId || "00000000000000000000000000000000"));
   const scope = computed(() => String(config.public.authScope || "openid profile email"));
 
-  const buildRedirectUri = () => `${window.location.origin}/callback`;
+  const buildRedirectUri = () => `${window.location.origin}/`;
 
   const startAuthorization = async () => {
     const codeVerifier = createPkceVerifier();
@@ -97,12 +102,16 @@ export function usePortalAuthFlow() {
       ...tokens,
       issued_at: new Date().toISOString()
     };
-    sessionStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(stored));
+    localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(stored));
     return stored;
   };
 
   const readTokens = (): StoredTokens | null => {
-    const raw = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+    if (!import.meta.client) {
+      return null;
+    }
+
+    const raw = localStorage.getItem(TOKEN_STORAGE_KEY);
     if (!raw) {
       return null;
     }
@@ -115,7 +124,93 @@ export function usePortalAuthFlow() {
   };
 
   const clearTokens = () => {
-    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    if (!import.meta.client) {
+      return;
+    }
+
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  };
+
+  const saveUserInfo = (userInfo: Record<string, unknown>) => {
+    const stored: StoredUserInfo = {
+      ...userInfo,
+      saved_at: new Date().toISOString()
+    };
+    localStorage.setItem(USER_INFO_STORAGE_KEY, JSON.stringify(stored));
+    return stored;
+  };
+
+  const readUserInfo = (): StoredUserInfo | null => {
+    if (!import.meta.client) {
+      return null;
+    }
+
+    const raw = localStorage.getItem(USER_INFO_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw) as StoredUserInfo;
+    } catch {
+      return null;
+    }
+  };
+
+  const clearUserInfo = () => {
+    if (!import.meta.client) {
+      return;
+    }
+
+    localStorage.removeItem(USER_INFO_STORAGE_KEY);
+  };
+
+  const completeAuthorization = async (input: { code: string; state: string }) => {
+    const storedFlow = readStoredFlow();
+    if (!storedFlow) {
+      throw new Error("Stored authorization request was not found.");
+    }
+
+    if (storedFlow.state !== input.state) {
+      throw new Error("Authorization state did not match.");
+    }
+
+    const tokenResult = await api.exchangeCode({
+      clientId: clientId.value,
+      code: input.code,
+      codeVerifier: storedFlow.codeVerifier,
+      redirectUri: storedFlow.redirectUri
+    });
+
+    if (!tokenResult.ok || !tokenResult.data.access_token) {
+      throw new Error(tokenResult.data.message || `Token exchange failed. status=${tokenResult.status}`);
+    }
+
+    const tokens = saveTokens({
+      access_token: tokenResult.data.access_token,
+      refresh_token: tokenResult.data.refresh_token,
+      id_token: tokenResult.data.id_token,
+      token_type: tokenResult.data.token_type,
+      expires_in: tokenResult.data.expires_in,
+      refresh_token_expires_in: tokenResult.data.refresh_token_expires_in,
+      scope: tokenResult.data.scope
+    });
+
+    const userInfoResult = await api.fetchUserInfo(tokenResult.data.access_token);
+    if (!userInfoResult.ok) {
+      throw new Error(userInfoResult.data.message || `UserInfo request failed. status=${userInfoResult.status}`);
+    }
+
+    const userInfo = saveUserInfo(userInfoResult.data);
+    clearStoredFlow();
+    authorizationSession.clearSessionId();
+
+    return {
+      tokens,
+      userInfo,
+      tokenResponse: tokenResult.data,
+      userInfoResponse: userInfoResult.data
+    };
   };
 
   return {
@@ -124,8 +219,12 @@ export function usePortalAuthFlow() {
     startAuthorization,
     readStoredFlow,
     clearStoredFlow,
+    completeAuthorization,
     saveTokens,
     readTokens,
-    clearTokens
+    clearTokens,
+    saveUserInfo,
+    readUserInfo,
+    clearUserInfo
   };
 }

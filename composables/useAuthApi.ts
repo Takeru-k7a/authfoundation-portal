@@ -5,7 +5,8 @@ import type {
   SignupResponse,
   TermsResponse,
   TermsSubmitResponse,
-  TokenResponse
+  TokenResponse,
+  UserInfoResponse
 } from "~/types/auth";
 import { sha256HexUpper } from "~/utils/sha256";
 
@@ -130,6 +131,24 @@ export function useAuthApi() {
     });
   };
 
+  const fetchUserInfo = async (accessToken: string): Promise<AuthApiResult<UserInfoResponse>> => {
+    const response = await fetch(resolveApiPath("/userinfo"), {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`
+      }
+    });
+
+    const text = await response.text();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: parseResponse<UserInfoResponse>(text),
+      location: normalizeRedirect(response.headers.get("Location"))
+    };
+  };
+
   const startAuthorize = async (authorizeUrl: URL): Promise<AuthApiResult<AuthorizeStartResponse>> => {
     const response = await fetch(authorizeUrl.toString(), {
       method: "GET",
@@ -158,6 +177,7 @@ export function useAuthApi() {
     signup,
     fetchTerms,
     submitTerms,
-    exchangeCode
+    exchangeCode,
+    fetchUserInfo
   };
 }

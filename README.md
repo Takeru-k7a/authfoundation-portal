@@ -10,11 +10,12 @@ The current AuthFoundation API still owns the OIDC flow and accepts form posts. 
 - `/login`
 - `/signup`
 - `/terms`
-- `/callback?code=...&state=...`
+- `/?code=...&state=...`
+- `/callback?code=...&state=...` legacy/dev page
 
 `/` starts the OIDC authorization code flow with PKCE. It uses `client_id=00000000000000000000000000000000` by default, stores `state`, `nonce`, and `code_verifier` in `sessionStorage`, calls the AuthFoundation API `/authorize` endpoint, stores the returned authorization `session_id` in `localStorage`, and then moves to the returned screen URL.
 
-`/callback` validates `state`, exchanges the returned authorization code at `/token`, and stores the returned tokens in `sessionStorage`. This is a scaffolding behavior for development; production authorization state should be tightened before storing long-lived tokens in the browser.
+`/` also receives the authorization redirect. When `code` and `state` are present, it validates `state`, exchanges the authorization code at `/token`, stores tokens in `localStorage`, calls `/userinfo`, stores UserInfo in `localStorage`, and removes the callback query from the browser URL. This is a scaffolding behavior for development; production authorization state should be tightened before storing long-lived tokens in the browser.
 
 ## Local Run
 
@@ -83,6 +84,13 @@ The portal top page builds this URL and calls it with `x-auth-ui-session-mode: b
 - Header: `x-flow-type: AuthorizationCode`
 - Body: `grant_type=authorization_code`, `client_id`, `code`, `code_verifier`, `redirect_uri`
 
+### UserInfo
+
+- `GET /userinfo`
+- Header: `Authorization: Bearer <access_token>`
+
+The portal top page calls this after a successful token exchange and stores the returned claims in `localStorage`.
+
 ## Cloud Run Build
 
 This app includes a basic Dockerfile and `.github/workflows/deploy-cloud-run.yml`.
@@ -105,5 +113,6 @@ Required AuthFoundation API settings:
 
 - `AuthUiBaseUrl=https://portal.osolab-auth.jp`
 - `Cors__AllowedOrigins=https://portal.osolab-auth.jp`
+- Client redirect URI for `00000000000000000000000000000000` must include `https://portal.osolab-auth.jp/`
 
 Those values belong to the AuthFoundation API repository, not this portal repository.

@@ -67,3 +67,13 @@ export type TokenResponse = {
   message?: string;
   raw?: string;
 };
+
+export type UserInfoResponse = {
+  sub?: string;
+  email?: string;
+  email_verified?: boolean;
+  response_code?: string;
+  message?: string;
+  raw?: string;
+  [claim: string]: unknown;
+};
