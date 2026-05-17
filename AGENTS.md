@@ -36,12 +36,13 @@ Flow summary:
 
 1. `/` creates `code_verifier`, `code_challenge`, `state`, and `nonce`.
 2. `/` stores transient authorization state in `sessionStorage`.
-3. `/` redirects to `${NUXT_PUBLIC_AUTH_API_BASE}/authorize`.
-4. Auth API redirects to `/login?session_id=...`.
-5. Login posts credentials to Auth API `/login`.
-6. Auth API redirects back to `/callback?code=...&state=...`.
-7. `/callback` validates `state` and exchanges the code at `/token`.
-8. Returned tokens are stored in `sessionStorage` for scaffolding only.
+3. `/` calls `${NUXT_PUBLIC_AUTH_API_BASE}/authorize` with `x-auth-ui-session-mode: body`.
+4. Auth API returns `session_id` in the JSON body and `redirect_url` without a `session_id` query parameter.
+5. `/` stores `session_id` in `localStorage` and navigates to the returned screen URL, normally `/login`.
+6. Login posts credentials and `session_id` in the form body to Auth API `/login`.
+7. Auth API redirects back to `/callback?code=...&state=...`.
+8. `/callback` validates `state` and exchanges the code at `/token`.
+9. Returned tokens are stored in `sessionStorage` for scaffolding only.
 
 Production note: browser `sessionStorage` token storage is acceptable for this scaffold, but should be replaced or tightened before handling sensitive production sessions.
 
@@ -109,3 +110,10 @@ https://portal.osolab-auth.jp
 ```
 
 The Auth API must also expose the `Location` header because login and terms endpoints return redirects consumed by the browser UI.
+
+Portal-owned authorization session handling:
+
+- Do not put `session_id` in portal URLs.
+- Store the active authorization `session_id` in `localStorage` under `authfoundation.portal.authorization_session_id`.
+- Send `session_id` to Auth API screen actions in `application/x-www-form-urlencoded` body fields.
+- Keep `x-session-id` only as a legacy API compatibility path; new portal changes should not depend on it.

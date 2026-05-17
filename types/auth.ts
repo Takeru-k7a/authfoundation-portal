@@ -5,6 +5,15 @@ export type AuthApiResult<T> = {
   location: string | null;
 };
 
+export type AuthorizeStartResponse = {
+  result?: "redirect" | "error";
+  redirect_url?: string;
+  session_id?: string;
+  response_code?: string;
+  message?: string;
+  raw?: string;
+};
+
 export type LoginResponse = {
   result?: "redirect" | "logged_in" | "error";
   response_code?: string;
@@ -32,7 +41,7 @@ export type TermsResponse = {
 };
 
 export type TermItem = {
-  term_id: number;
+  term_id: string;
   title: string;
   version: string;
   required: boolean;

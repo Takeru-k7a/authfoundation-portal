@@ -1,18 +1,45 @@
+const AUTH_SESSION_STORAGE_KEY = "authfoundation.portal.authorization_session_id";
+
 export function useAuthorizationSession() {
-  const route = useRoute();
+  const sessionId = ref("");
 
-  const sessionId = computed(() => {
-    const value = route.query.session_id ?? route.query.sid;
-    return Array.isArray(value) ? value[0] ?? "" : value?.toString() ?? "";
-  });
+  const readSessionId = () => {
+    if (!import.meta.client) {
+      return "";
+    }
 
-  const appendSessionQuery = (path: string) => {
-    const query = sessionId.value ? `session_id=${encodeURIComponent(sessionId.value)}` : "";
-    return query ? `${path}?${query}` : path;
+    return localStorage.getItem(AUTH_SESSION_STORAGE_KEY) || "";
   };
 
+  const saveSessionId = (value: string) => {
+    if (!import.meta.client || !value) {
+      return;
+    }
+
+    localStorage.setItem(AUTH_SESSION_STORAGE_KEY, value);
+    sessionId.value = value;
+  };
+
+  const clearSessionId = () => {
+    if (!import.meta.client) {
+      return;
+    }
+
+    localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
+    sessionId.value = "";
+  };
+
+  const appendSessionQuery = (path: string) => path;
+
+  onMounted(() => {
+    sessionId.value = readSessionId();
+  });
+
   return {
-    sessionId,
+    sessionId: readonly(sessionId),
+    readSessionId,
+    saveSessionId,
+    clearSessionId,
     appendSessionQuery
   };
 }

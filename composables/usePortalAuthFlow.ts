@@ -24,6 +24,7 @@ export type StoredTokens = {
 
 export function usePortalAuthFlow() {
   const api = useAuthApi();
+  const authorizationSession = useAuthorizationSession();
   const config = useRuntimeConfig();
 
   const clientId = computed(() => String(config.public.authClientId || "00000000000000000000000000000000"));
@@ -57,7 +58,21 @@ export function usePortalAuthFlow() {
     authorizeUrl.searchParams.set("code_challenge", codeChallenge);
     authorizeUrl.searchParams.set("nonce", nonce);
 
-    window.location.assign(authorizeUrl.toString());
+    const result = await api.startAuthorize(authorizeUrl);
+    if (!result.ok) {
+      throw new Error(result.data.message || `Authorization start failed. status=${result.status}`);
+    }
+
+    if (result.data.session_id) {
+      authorizationSession.saveSessionId(result.data.session_id);
+    }
+
+    const redirectUrl = result.data.redirect_url || result.location;
+    if (!redirectUrl) {
+      throw new Error("Authorization response did not include redirect_url.");
+    }
+
+    window.location.assign(redirectUrl);
   };
 
   const readStoredFlow = (): StoredFlow | null => {

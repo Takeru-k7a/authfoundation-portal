@@ -1,4 +1,5 @@
 import type {
+  AuthorizeStartResponse,
   AuthApiResult,
   LoginResponse,
   SignupResponse,
@@ -48,7 +49,6 @@ export function useAuthApi() {
 
   const postForm = async <T>(
     path: string,
-    sessionId: string,
     values: Record<string, FormValue | FormValue[]>,
     extraHeaders: Record<string, string> = {}
   ): Promise<AuthApiResult<T>> => {
@@ -67,7 +67,6 @@ export function useAuthApi() {
       credentials: "include",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        ...(sessionId ? { "x-session-id": sessionId } : {}),
         ...extraHeaders
       },
       body: body.toString()
@@ -82,26 +81,10 @@ export function useAuthApi() {
     };
   };
 
-  const getJson = async <T>(path: string, sessionId: string): Promise<AuthApiResult<T>> => {
-    const response = await fetch(resolveApiPath(path), {
-      credentials: "include",
-      headers: {
-        ...(sessionId ? { "x-session-id": sessionId } : {})
-      }
-    });
-
-    const text = await response.text();
-    return {
-      ok: response.ok,
-      status: response.status,
-      data: parseResponse<T>(text),
-      location: normalizeRedirect(response.headers.get("Location"))
-    };
-  };
-
   const login = async (input: { sessionId: string; email: string; password: string }) => {
     const passwordHash = await sha256HexUpper(input.password);
-    return await postForm<LoginResponse>("/login", input.sessionId, {
+    return await postForm<LoginResponse>("/login", {
+      session_id: input.sessionId,
       email: input.email,
       password: passwordHash
     });
@@ -109,18 +92,22 @@ export function useAuthApi() {
 
   const signup = async (input: { sessionId: string; email: string; password: string }) => {
     const passwordHash = await sha256HexUpper(input.password);
-    return await postForm<SignupResponse>("/Signup/Account", input.sessionId, {
+    return await postForm<SignupResponse>("/Signup/Account", {
+      session_id: input.sessionId,
       email: input.email,
       password: passwordHash
     });
   };
 
   const fetchTerms = async (sessionId: string) => {
-    return await getJson<TermsResponse>("/terms", sessionId);
+    return await postForm<TermsResponse>("/terms/list", {
+      session_id: sessionId
+    });
   };
 
-  const submitTerms = async (input: { sessionId: string; accepted: boolean; termIds: number[] }) => {
-    return await postForm<TermsSubmitResponse>("/terms", input.sessionId, {
+  const submitTerms = async (input: { sessionId: string; accepted: boolean; termIds: string[] }) => {
+    return await postForm<TermsSubmitResponse>("/terms", {
+      session_id: input.sessionId,
       accepted: input.accepted,
       term_ids: input.termIds
     });
@@ -132,7 +119,7 @@ export function useAuthApi() {
     codeVerifier: string;
     redirectUri: string;
   }) => {
-    return await postForm<TokenResponse>("/token", "", {
+    return await postForm<TokenResponse>("/token", {
       grant_type: "authorization_code",
       client_id: input.clientId,
       code: input.code,
@@ -143,10 +130,30 @@ export function useAuthApi() {
     });
   };
 
+  const startAuthorize = async (authorizeUrl: URL): Promise<AuthApiResult<AuthorizeStartResponse>> => {
+    const response = await fetch(authorizeUrl.toString(), {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Accept": "application/json",
+        "x-auth-ui-session-mode": "body"
+      }
+    });
+
+    const text = await response.text();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: parseResponse<AuthorizeStartResponse>(text),
+      location: normalizeRedirect(response.headers.get("Location"))
+    };
+  };
+
   return {
     authApiBase,
     resolveApiPath,
     normalizeRedirect,
+    startAuthorize,
     login,
     signup,
     fetchTerms,

@@ -7,12 +7,12 @@ The current AuthFoundation API still owns the OIDC flow and accepts form posts. 
 ## Screens
 
 - `/`
-- `/login?session_id=...`
-- `/signup?session_id=...`
-- `/terms?session_id=...`
+- `/login`
+- `/signup`
+- `/terms`
 - `/callback?code=...&state=...`
 
-`/` starts the OIDC authorization code flow with PKCE. It uses `client_id=00000000000000000000000000000000` by default, stores `state`, `nonce`, and `code_verifier` in `sessionStorage`, and redirects to the AuthFoundation API `/authorize` endpoint.
+`/` starts the OIDC authorization code flow with PKCE. It uses `client_id=00000000000000000000000000000000` by default, stores `state`, `nonce`, and `code_verifier` in `sessionStorage`, calls the AuthFoundation API `/authorize` endpoint, stores the returned authorization `session_id` in `localStorage`, and then moves to the returned screen URL.
 
 `/callback` validates `state`, exchanges the returned authorization code at `/token`, and stores the returned tokens in `sessionStorage`. This is a scaffolding behavior for development; production authorization state should be tightened before storing long-lived tokens in the browser.
 
@@ -51,32 +51,30 @@ For a separate origin, AuthFoundation will also need CORS, `Access-Control-Expos
 - Query: `code_challenge`
 - Query: `nonce`
 
-The portal top page builds this URL and relies on the API to redirect back to `/login?session_id=...`.
+The portal top page builds this URL and calls it with `x-auth-ui-session-mode: body`. In this mode the API returns JSON containing `session_id` and `redirect_url` instead of exposing `session_id` in the redirect URL.
 
 ### Login
 
 - `POST /login`
 - `Content-Type: application/x-www-form-urlencoded`
-- Header: `x-session-id: <authorization session id>`
-- Body: `email`, `password`
+- Body: `session_id`, `email`, `password`
 - Password is sent as upper-case SHA-256 hex to match the current templates.
 
 ### Signup
 
 - `POST /Signup/Account`
 - `Content-Type: application/x-www-form-urlencoded`
-- Header: `x-session-id: <authorization session id>`
-- Body: `email`, `password`
+- Body: `session_id`, `email`, `password`
 
 ### Terms
 
-- `GET /terms`
-- Header: `x-session-id: <authorization session id>`
+- `POST /terms/list`
+- `Content-Type: application/x-www-form-urlencoded`
+- Body: `session_id`
 
 - `POST /terms`
 - `Content-Type: application/x-www-form-urlencoded`
-- Header: `x-session-id: <authorization session id>`
-- Body: `accepted`, repeated `term_ids`
+- Body: `session_id`, `accepted`, repeated `term_ids`
 
 ### Token
 

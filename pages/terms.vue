@@ -71,7 +71,7 @@ const submitting = ref(false);
 const errorMessage = ref("");
 const terms = ref<TermItem[]>([]);
 const scopes = ref<string[]>([]);
-const acceptedTermIds = ref<number[]>([]);
+const acceptedTermIds = ref<string[]>([]);
 const lastResponse = ref<unknown>(null);
 
 async function loadTerms() {
