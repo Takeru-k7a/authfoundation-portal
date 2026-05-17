@@ -1,4 +1,5 @@
 name: Build and Deploy Auth Portal to Cloud Run
+run-name: Deploy auth portal to Cloud Run
 
 on:
   workflow_dispatch:
