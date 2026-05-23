@@ -174,7 +174,7 @@ export function useAuthApi() {
       credentials: "include",
       headers: {
         Accept: "application/json",
-        "x-auth-ui-session-mode": "body"
+        "x-auth-ui-response-mode": "json"
       }
     });
 

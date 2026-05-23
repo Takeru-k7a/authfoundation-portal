@@ -38,7 +38,7 @@ Flow summary:
 
 1. `/` creates `code_verifier`, `code_challenge`, `state`, and `nonce`.
 2. `/` stores only transient authorization state in `sessionStorage`.
-3. `/` calls `${NUXT_PUBLIC_AUTH_API_BASE}/authorize` with `x-auth-ui-session-mode: body`.
+3. `/` calls `${NUXT_PUBLIC_AUTH_API_BASE}/authorize` with `x-auth-ui-response-mode: json`.
 4. Auth API sets the authorization session as an HttpOnly Cookie and returns `redirect_url`.
 5. `/` navigates to the returned screen URL, normally `/login`.
 6. Login, signup, and terms actions post only their screen fields; Auth API reads session state from Cookie.

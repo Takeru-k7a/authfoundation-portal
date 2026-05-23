@@ -8,7 +8,6 @@ export type AuthApiResult<T> = {
 export type AuthorizeStartResponse = {
   result?: "redirect" | "error";
   redirect_url?: string;
-  session_id?: string;
   response_code?: string;
   message?: string;
   raw?: string;

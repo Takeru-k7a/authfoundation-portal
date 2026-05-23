@@ -16,7 +16,7 @@ The portal behaves as a lightweight OIDC client for development and operations: 
 
 1. User opens `/` and clicks OIDC login.
 2. Portal stores only transient `state`, `nonce`, and `code_verifier` in `sessionStorage`.
-3. Portal calls `GET /authorize` with `x-auth-ui-session-mode: body`.
+3. Portal calls `GET /authorize` with `x-auth-ui-response-mode: json`.
 4. Auth API creates the authorization session, sets the session as an HttpOnly Cookie, and returns `redirect_url`.
 5. Portal navigates to `redirect_url`, normally `/login`.
 6. `/login`, `/signup`, and `/terms` post form data without `session_id`; Auth API reads the authorization session from Cookie.
@@ -64,9 +64,9 @@ For a separate origin, AuthFoundation must allow CORS, expose the `Location` hea
 - Query: `code_challenge_method=S256`
 - Query: `code_challenge`
 - Query: `nonce`
-- Header: `x-auth-ui-session-mode: body`
+- Header: `x-auth-ui-response-mode: json`
 
-The API returns JSON with `redirect_url` and sets the authorization session as an HttpOnly Cookie. A `session_id` body field may exist for compatibility, but the portal does not persist or send it.
+The API returns JSON with `redirect_url` and sets the authorization session as an HttpOnly Cookie. The authorization session ID must not be returned in the response body.
 
 ### Login
 
