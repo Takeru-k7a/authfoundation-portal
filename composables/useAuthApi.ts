@@ -116,9 +116,11 @@ export function useAuthApi() {
     });
   };
 
-  const signupAccount = async (input: { password: string }) => {
+  const signupAccount = async (input: { password: string; name: string; birthdate: string }) => {
     return await postForm<SignupAccountResponse>("/signup/account", {
-      password: input.password
+      password: input.password,
+      name: input.name,
+      birthdate: input.birthdate
     });
   };
 

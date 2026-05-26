@@ -49,6 +49,24 @@
 
     <form v-else class="stack" @submit.prevent="submitAccount">
       <FormField
+        id="name"
+        v-model="name"
+        label="Name"
+        autocomplete="name"
+        placeholder="Takeru Osolab"
+        required
+      />
+
+      <FormField
+        id="birthdate"
+        v-model="birthdate"
+        label="Birthdate"
+        type="date"
+        autocomplete="bday"
+        required
+      />
+
+      <FormField
         id="password"
         v-model="password"
         label="パスワード"
@@ -92,6 +110,8 @@ const api = useAuthApi();
 const stage = ref<SignupStage>("email");
 const email = ref("");
 const verificationCode = ref("");
+const name = ref("");
+const birthdate = ref("");
 const password = ref("");
 const passwordConfirm = ref("");
 const pending = ref(false);
@@ -154,7 +174,9 @@ async function submitAccount() {
 
   try {
     const result = await api.signupAccount({
-      password: password.value
+      password: password.value,
+      name: name.value.trim(),
+      birthdate: birthdate.value
     });
 
     if (result.ok && result.data.result === "redirect" && result.location) {
@@ -178,6 +200,8 @@ async function submitAccount() {
 function resetToEmail() {
   stage.value = "email";
   verificationCode.value = "";
+  name.value = "";
+  birthdate.value = "";
   password.value = "";
   passwordConfirm.value = "";
   errorMessage.value = "";
